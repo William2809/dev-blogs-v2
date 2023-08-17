@@ -66,7 +66,7 @@ const PostCard: FC<Props> = ({
 							<span className="animate-pulse">Removing</span>
 						) : (
 							<>
-								<Link href={"/admin/post/update/" + slug}>
+								<Link href={"/admin/posts/update/" + slug}>
 									<a className="hover:underline">Edit</a>
 								</Link>
 								<button

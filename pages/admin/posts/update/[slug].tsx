@@ -9,6 +9,7 @@ import Post from "../../../../models/Post";
 import AdminLayout from "../../../../components/layout/AdminLayout";
 import axios from "axios";
 import { generateFormData } from "../../../../utils/helper";
+import { useState } from "react";
 
 interface PostResponse extends FinalPost {
 	id: string;
@@ -17,7 +18,10 @@ interface PostResponse extends FinalPost {
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
 const Update: NextPage<Props> = ({ post }) => {
+	const [updating, setUpdating] = useState(false);
+
 	const handleSubmit = async (post: FinalPost) => {
+		setUpdating(true);
 		try {
 			// we have to generate formdata
 			const formData = generateFormData(post);
@@ -28,6 +32,7 @@ const Update: NextPage<Props> = ({ post }) => {
 		} catch (error: any) {
 			console.log(error.response.data);
 		}
+		setUpdating(false);
 	};
 
 	return (
@@ -36,6 +41,7 @@ const Update: NextPage<Props> = ({ post }) => {
 				<Editor
 					initialValue={post}
 					onSubmit={handleSubmit}
+					busy={updating}
 					btnTitle="Update"
 				/>
 			</div>

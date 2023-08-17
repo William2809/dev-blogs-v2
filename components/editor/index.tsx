@@ -59,7 +59,6 @@ const Editor: FC<Props> = ({
 		const { data } = await axios.post("/api/image", formData);
 		setUploading(false);
 
-		console.log(data);
 		setImages([data, ...images]);
 	};
 
@@ -163,6 +162,7 @@ const Editor: FC<Props> = ({
 								busy={busy}
 								title={btnTitle}
 								onClick={handleSubmit}
+								disabled={busy}
 							/>
 						</div>
 					</div>
