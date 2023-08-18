@@ -1,4 +1,5 @@
 import Joi, { ObjectSchema } from "joi";
+import { isValidObjectId } from "mongoose";
 
 export const errorMessages = {
 	INVALID_TITLE: "Title is missing!",
@@ -28,6 +29,23 @@ export const postValidationSchema = Joi.object().keys({
 	tags: Joi.array().items(Joi.string()).messages({
 		"string.base": errorMessages.INVALID_META,
 		"string.empty": errorMessages.INVALID_META,
+	}),
+});
+
+export const commentValidationSchema = Joi.object().keys({
+	belongsTo: Joi.string()
+		.custom((value, helper) => {
+			if (isValidObjectId(value)) {
+				return helper.error("any.invalid");
+			}
+			return true;
+		})
+		.messages({
+			"any.invalid": "Post id should be presented as belongsTo!",
+			"string.empty": "Invalid belongsTo!",
+		}),
+	content: Joi.string().required().messages({
+		"string.empty": "content is missing inside comment!",
 	}),
 });
 

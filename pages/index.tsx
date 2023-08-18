@@ -11,6 +11,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { filterPosts } from "../utils/helper";
+import useAuth from "../hooks/useAuth";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
@@ -18,9 +19,7 @@ const Home: NextPage<Props> = ({ posts }) => {
 	const [postsToRender, setPostsToRender] = useState(posts);
 	const [hasMorePosts, setHasMorePosts] = useState(posts.length >= limit);
 
-	const { data } = useSession();
-	const profile = data?.user as UserProfile;
-
+	const profile = useAuth();
 	const isAdmin = profile && profile.role === "admin";
 
 	const fetchMorePosts = async () => {

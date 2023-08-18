@@ -61,3 +61,9 @@ export const isAdmin = async (req: NextApiRequest, res: NextApiResponse) => {
 
 	return user && user.role === "admin";
 };
+
+export const isAuth = async (req: NextApiRequest, res: NextApiResponse) => {
+	const session = await unstable_getServerSession(req, res, authOptions);
+	const user = session?.user;
+	if (user) return user as UserProfile;
+};
