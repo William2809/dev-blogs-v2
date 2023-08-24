@@ -9,7 +9,7 @@ export interface IComment {
 	replies?: ObjectId[];
 	repliedTo?: ObjectId;
 	chiefComment?: boolean;
-	createdAt?: string;
+	createdAt: string;
 }
 
 const CommentSchema = new Schema<IComment>(
