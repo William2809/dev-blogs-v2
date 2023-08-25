@@ -9,12 +9,15 @@ import {
 } from "react-icons/bs";
 import CommentForm from "./CommentForm";
 import { CommentResponse } from "../../utils/types";
+import LikeHeart from "./LikeHeart";
 
 interface Props {
 	comment: CommentResponse;
 	showControls?: boolean;
 	onUpdateSubmit?(content: string): void;
 	onReplySubmit?(content: string): void;
+	onDeleteClick?(): void;
+	onLikeClick?(): void;
 }
 
 const CommentCard: FC<Props> = ({
@@ -22,8 +25,10 @@ const CommentCard: FC<Props> = ({
 	onUpdateSubmit,
 	onReplySubmit,
 	showControls = false,
+	onDeleteClick,
+	onLikeClick,
 }): JSX.Element => {
-	const { owner, createdAt, content } = comment;
+	const { owner, createdAt, content, likedByOwner, likes } = comment;
 	const { name, avatar } = owner;
 	const [showForm, setShowForm] = useState(false);
 	const [initialState, setInitialState] = useState("");
@@ -69,13 +74,18 @@ const CommentCard: FC<Props> = ({
 					{name}
 				</h1>
 				<span className="text-sm text-secondary-dark">
-					{dateFormat(createdAt, "d-mm-yyy")}
+					{dateFormat(createdAt, "d-mm-yyyy")}
 				</span>
 				<div className=" text-primary-dark dark:text-primary ">
 					{parse(content)}
 				</div>
 
 				<div className="flex space-x-4">
+					<LikeHeart
+						liked={likedByOwner}
+						label={likes + " likes"}
+						onClick={onLikeClick}
+					/>
 					<Button onClick={handleOnReplyClick}>
 						<BsFillReplyAllFill />
 						<span>Reply</span>
@@ -86,7 +96,7 @@ const CommentCard: FC<Props> = ({
 								<BsPencilSquare />
 								<span>Edit</span>
 							</Button>
-							<Button>
+							<Button onClick={onDeleteClick}>
 								<BsFillTrashFill />
 								<span>Delete</span>
 							</Button>

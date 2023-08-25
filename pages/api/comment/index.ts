@@ -137,7 +137,10 @@ const updateComment: NextApiHandler = async (req, res) => {
 		return res.status(422).json({ error: "Invalid request!" });
 	}
 
-	const comment = await Comment.findOne({ _id: commentId, owner: user.id });
+	const comment = await Comment.findOne({
+		_id: commentId,
+		owner: user.id,
+	}).populate("owner");
 	if (!comment) {
 		return res.status(404).json({ error: "Comment not found!" });
 	}
@@ -145,7 +148,7 @@ const updateComment: NextApiHandler = async (req, res) => {
 	comment.content = req.body.content;
 	await comment.save();
 
-	res.json(comment);
+	res.json({ comment: formatComment(comment) });
 };
 
 export default handler;

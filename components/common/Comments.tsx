@@ -5,6 +5,7 @@ import { GitHubAuthButton } from "../button";
 import axios from "axios";
 import { CommentResponse } from "../../utils/types";
 import CommentCard from "./CommentCard";
+import ConfirmModal from "./ConfirmModal";
 
 interface Props {
 	belongsTo: string;
@@ -12,6 +13,9 @@ interface Props {
 
 const Comments: FC<Props> = ({ belongsTo }): JSX.Element => {
 	const [comments, setComments] = useState<CommentResponse[]>();
+	const [showConfirmModal, SetShowConfirmModal] = useState(false);
+	const [commentToDelete, setCommentToDelete] =
+		useState<CommentResponse | null>(null);
 
 	const userProfile = useAuth();
 
@@ -31,6 +35,81 @@ const Comments: FC<Props> = ({ belongsTo }): JSX.Element => {
 		}
 
 		setComments([...updatedComments]);
+	};
+
+	const updatedEditedComment = (newComment: CommentResponse) => {
+		if (!comments) {
+			return;
+		}
+
+		let updatedComments = [...comments];
+		// To update the comment we can only change the content
+
+		// if edited comment is chief
+		if (newComment.chiefComment) {
+			const index = updatedComments.findIndex(({ id }) => id === newComment.id);
+			updatedComments[index].content = newComment.content;
+		}
+		// otherwise updating comment from replies
+		else {
+			const chiefCommentIndex = updatedComments.findIndex(
+				({ id }) => id === newComment.repliedTo
+			);
+
+			let newReplies = updatedComments[chiefCommentIndex].replies;
+			newReplies = newReplies?.map((comment) => {
+				if (comment.id === newComment.id) {
+					comment.content = newComment.content;
+				}
+				return comment;
+			});
+
+			updatedComments[chiefCommentIndex].replies = newReplies;
+		}
+
+		setComments([...updatedComments]);
+	};
+
+	const updateLikedComments = (likedComment: CommentResponse) => {
+		if (!comments) return;
+		let newComments = [...comments];
+		if (likedComment.chiefComment) {
+			newComments = newComments.map((comment) => {
+				if (comment.id === likedComment.id) return likedComment;
+				return comment;
+			});
+		} else {
+			const chiefCommentIndex = newComments.findIndex(
+				({ id }) => id === likedComment.repliedTo
+			);
+			const newReplies = newComments[chiefCommentIndex].replies?.map(
+				(reply) => {
+					if (reply.id === likedComment.id) return likedComment;
+					return reply;
+				}
+			);
+			newComments[chiefCommentIndex].replies = newReplies;
+		}
+
+		setComments([...newComments]);
+	};
+
+	const updateDeletedComments = (deletedComment: CommentResponse) => {
+		if (!comments) return;
+		let newComments = [...comments];
+		if (deletedComment.chiefComment) {
+			newComments = newComments.filter(({ id }) => id !== deletedComment.id);
+		} else {
+			const chiefCommentIndex = newComments.findIndex(
+				({ id }) => id === deletedComment.repliedTo
+			);
+			const newReplies = newComments[chiefCommentIndex].replies?.filter(
+				({ id }) => id !== deletedComment.id
+			);
+			newComments[chiefCommentIndex].replies = newReplies;
+		}
+
+		setComments([...newComments]);
 	};
 
 	const handleNewCommentSubmit = async (content: string) => {
@@ -56,13 +135,51 @@ const Comments: FC<Props> = ({ belongsTo }): JSX.Element => {
 			.catch((err) => console.log(err));
 	};
 
+	const handleUpdateSubmit = async (content: string, id: string) => {
+		await axios
+			.patch(`/api/comment?commentId=${id}`, { content })
+			.then(({ data }) => updatedEditedComment(data.comment))
+			.catch((err) => console.log(err));
+	};
+
+	const handleOnDeleteClick = async (comment: CommentResponse) => {
+		setCommentToDelete(comment);
+		SetShowConfirmModal(true);
+	};
+
+	const handleOnDeleteCancel = async () => {
+		setCommentToDelete(null);
+		SetShowConfirmModal(false);
+	};
+
+	const handleOnDeleteConfirm = async () => {
+		if (!commentToDelete) return;
+		axios
+			.delete(`/api/comment?commentId=${commentToDelete.id}`)
+			.then(({ data }) => {
+				if (data.removed) updateDeletedComments(commentToDelete);
+			})
+			.catch((err) => console.log(err))
+			.finally(() => {
+				setCommentToDelete(null);
+				SetShowConfirmModal(false);
+			});
+	};
+
+	const handleOnLikeClick = (comment: CommentResponse) => {
+		axios
+			.post("/api/comment/update-like", { commentId: comment.id })
+			.then(({ data }) => updateLikedComments(data.comment))
+			.catch((err) => console.log(err));
+	};
+
 	useEffect(() => {
 		axios(`/api/comment?belongsTo=${belongsTo}`)
 			.then(({ data }) => {
 				setComments(data.comments);
 			})
 			.catch((err) => console.log(err));
-	}, []);
+	}, [belongsTo]);
 
 	return (
 		<div className="py-20 space-y-4">
@@ -90,9 +207,11 @@ const Comments: FC<Props> = ({ belongsTo }): JSX.Element => {
 							onReplySubmit={(content) =>
 								handleReplySubmit({ content, repliedTo: comment.id })
 							}
-							onUpdateSubmit={(content) => {
-								console.log("update:", content);
-							}}
+							onUpdateSubmit={(content) =>
+								handleUpdateSubmit(content, comment.id)
+							}
+							onDeleteClick={() => handleOnDeleteClick(comment)}
+							onLikeClick={() => handleOnLikeClick(comment)}
 						/>
 
 						{replies?.length ? (
@@ -107,9 +226,11 @@ const Comments: FC<Props> = ({ belongsTo }): JSX.Element => {
 											onReplySubmit={(content) =>
 												handleReplySubmit({ content, repliedTo: comment.id })
 											}
-											onUpdateSubmit={(content) => {
-												console.log("update:", content);
-											}}
+											onUpdateSubmit={(content) =>
+												handleUpdateSubmit(content, reply.id)
+											}
+											onDeleteClick={() => handleOnDeleteClick(reply)}
+											onLikeClick={() => handleOnLikeClick(reply)}
 										/>
 									);
 								})}
@@ -118,6 +239,14 @@ const Comments: FC<Props> = ({ belongsTo }): JSX.Element => {
 					</div>
 				);
 			})}
+
+			<ConfirmModal
+				visible={showConfirmModal}
+				title="Are you sure?"
+				subTitle="This action will remove the this comment and replies if this is chief comment!"
+				onCancel={handleOnDeleteCancel}
+				onConfirm={handleOnDeleteConfirm}
+			/>
 		</div>
 	);
 };

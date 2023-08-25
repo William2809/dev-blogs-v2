@@ -52,7 +52,6 @@ const createNewPost: NextApiHandler = async (req, res) => {
 	}
 
 	//create new post
-	console.log(slug);
 	const newPost = new Post({
 		title,
 		content,
