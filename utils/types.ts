@@ -23,7 +23,6 @@ export interface UserProfile {
 	avatar: string | undefined;
 	role: "user" | "admin";
 }
-
 export type replyComments = CommentResponse[];
 export interface CommentResponse {
 	id: string;
@@ -39,4 +38,27 @@ export interface CommentResponse {
 		id: string;
 		avatar?: string;
 	};
+}
+
+export interface LatestComments {
+	id: string;
+	owner: {
+		id: string;
+		name: string;
+		avatar?: string;
+	};
+	content: string;
+	belongsTo: {
+		id: string;
+		title: string;
+		slug: string;
+	};
+}
+
+export interface LatestUserProfile {
+	id: string;
+	name: string;
+	avatar?: string;
+	provider: string;
+	email: string;
 }
