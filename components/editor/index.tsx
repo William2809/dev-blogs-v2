@@ -78,8 +78,6 @@ const Editor: FC<Props> = ({
 				placeholder: "Type something...",
 			}),
 			Youtube.configure({
-				// width: 840,
-				// height: 472.5,
 				HTMLAttributes: {
 					class: "w-full aspect-video",
 				},
