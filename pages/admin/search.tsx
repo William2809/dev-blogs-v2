@@ -32,6 +32,7 @@ const Search: NextPage<Props> = () => {
 			console.log("error while searching posts: ", error.message);
 		}
 	};
+
 	useEffect(() => {
 		if (loading) return;
 		handleSearch();
