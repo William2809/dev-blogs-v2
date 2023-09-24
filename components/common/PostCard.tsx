@@ -3,18 +3,13 @@ import { PostDetail } from "../../utils/types";
 import Image from "next/image";
 import dateformat from "dateformat";
 import Link from "next/link";
+import { trimText } from "../../utils/helper";
 interface Props {
 	post: PostDetail;
 	busy?: boolean;
 	controls?: boolean;
 	onDeleteClick?(): void;
 }
-
-const trimText = (text: string, trimBy: number) => {
-	if (text.length <= trimBy) return text;
-
-	return text.substring(0, trimBy).trim() + "...";
-};
 
 const PostCard: FC<Props> = ({
 	controls,
@@ -66,7 +61,7 @@ const PostCard: FC<Props> = ({
 							<span className="animate-pulse">Removing</span>
 						) : (
 							<>
-								<Link href={"/admin/post/update/" + slug}>
+								<Link href={"/admin/posts/update/" + slug}>
 									<a className="hover:underline">Edit</a>
 								</Link>
 								<button

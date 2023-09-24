@@ -1,19 +1,17 @@
 import { NextApiHandler } from "next";
 import dbConnect from "../../../lib/dbConnect";
-import Joi from "joi";
 import { postValidationSchema, validateSchema } from "../../../lib/validator";
 import {
 	formatPosts,
 	isAdmin,
+	isAuth,
 	readFile,
 	readPostsFromDb,
 } from "../../../lib/utils";
 import Post from "../../../models/Post";
 import formidable from "formidable";
 import cloudinary from "../../../lib/cloudinary";
-import { IncomingPost, UserProfile } from "../../../utils/types";
-import { unstable_getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { IncomingPost } from "../../../utils/types";
 
 export const config = {
 	api: { bodyParser: false },
@@ -26,12 +24,15 @@ const handler: NextApiHandler = async (req, res) => {
 			return readPosts(req, res);
 		case "POST":
 			return createNewPost(req, res);
+		default:
+			res.status(404).send("Not Found!");
 	}
 };
 
 const createNewPost: NextApiHandler = async (req, res) => {
 	const admin = await isAdmin(req, res);
-	if (!admin) {
+	const user = await isAuth(req, res);
+	if (!admin || !user) {
 		return res.status(401).json({ error: "Unauthorized request!" });
 	}
 
@@ -52,13 +53,13 @@ const createNewPost: NextApiHandler = async (req, res) => {
 	}
 
 	//create new post
-	console.log(slug);
 	const newPost = new Post({
 		title,
 		content,
 		slug,
 		meta,
 		tags,
+		author: user.id,
 	});
 
 	//uploading thumbnail if there is any

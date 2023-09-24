@@ -59,7 +59,6 @@ const Editor: FC<Props> = ({
 		const { data } = await axios.post("/api/image", formData);
 		setUploading(false);
 
-		console.log(data);
 		setImages([data, ...images]);
 	};
 
@@ -79,10 +78,8 @@ const Editor: FC<Props> = ({
 				placeholder: "Type something...",
 			}),
 			Youtube.configure({
-				width: 840,
-				height: 472.5,
 				HTMLAttributes: {
-					class: "mx-auto rounded",
+					class: "w-full aspect-video",
 				},
 			}),
 			TipTapImage.configure({
@@ -163,6 +160,7 @@ const Editor: FC<Props> = ({
 								busy={busy}
 								title={btnTitle}
 								onClick={handleSubmit}
+								disabled={busy}
 							/>
 						</div>
 					</div>
